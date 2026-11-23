@@ -1,0 +1,42 @@
+name: protected-paths
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  protected-paths:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      ACTION: ${{ github.event.action }}
+      APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'protected-ok') }}
+    steps:
+      - name: Check changed files
+        run: |
+          pattern='^(spec/|verify/tla/|verify/[^/]+\.sh$|verify/lean/(.*/)?(Statements|Model)\.lean$|\.github/CODEOWNERS$|\.github/workflows/(verify|protected-paths)\.yml$)'
+          changed="$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[] | .filename, (.previous_filename // empty)' | grep -E "$pattern" | sort -u || true)"
+          if [ -z "$changed" ]; then
+            echo "No protected paths changed."
+            exit 0
+          fi
+          echo "Protected paths changed:"
+          echo "$changed"
+          if [ "$ACTION" = "synchronize" ] && [ "$APPROVED" = "true" ]; then
+            gh pr edit "$PR" --repo "$REPO" --remove-label protected-ok
+            echo "::error::New commits arrived after protected-ok. The label was removed. Review again and re-add it."
+            exit 1
+          fi
+          if [ "$APPROVED" = "true" ]; then
+            echo "Approved with the protected-ok label."
+            exit 0
+          fi
+          echo "::error::This PR changes protected verification paths. Review them, then add the protected-ok label."
+          exit 1
