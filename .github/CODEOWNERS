@@ -1,0 +1,8 @@
+/spec/                          @miguel-elizalde
+/verify/tla/                    @miguel-elizalde
+/verify/lean/**/Statements.lean @miguel-elizalde
+/verify/lean/**/Model.lean      @miguel-elizalde
+/verify/*.sh                    @miguel-elizalde
+/.github/workflows/verify.yml   @miguel-elizalde
+/.github/workflows/protected-paths.yml @miguel-elizalde
+/.github/CODEOWNERS             @miguel-elizalde
