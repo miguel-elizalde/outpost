@@ -52,6 +52,9 @@ test: auth-test key-test
 it: auth-it key-it
 
 [group('all')]
+verify: verify-formal lint build check-generated test
+
+[group('all')]
 mutants:
     @status=0; \
     '{{just_executable()}}' auth-mutants || status=$?; \
@@ -173,3 +176,10 @@ _ef-update context secret:
     @connection=$(dotnet user-secrets list --project {{key_provider}} | tr -d '\r' | sed -n 's/^ConnectionStrings:{{secret}} = //p'); \
     if [[ -z $connection ]]; then echo "user secret ConnectionStrings:{{secret}} is not set" >&2; exit 1; fi; \
     dotnet ef database update --project {{key_provider}} --context {{context}} --connection "$connection"
+
+# Formal checks. verify-fast is seconds, verify-formal is minutes.
+verify-fast:
+    verify/run.sh --fast
+
+verify-formal:
+    verify/run.sh
