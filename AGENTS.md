@@ -21,3 +21,7 @@ A file that matches more than one area belongs to the most specific one only. Or
 5. `root-config`
 
 Globs follow git `:(glob)` pathspec rules: `*` stays inside one folder, `**` crosses folders. Check an area with `git ls-files ':(glob)<pattern>'`.
+
+## Spec
+
+Rules live in `spec/`. Read `spec/README.md` before touching `verify/`. Never edit `spec/`.
