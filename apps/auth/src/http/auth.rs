@@ -92,7 +92,7 @@ mod tests {
     };
 
     const ALICE: &str = "alice";
-    const PASSWORD: &str = "correct horse";
+    const PASSWORD: &str = "correct horse battery staple";
     const WRONG_PASSWORD: &str = "wrong horse";
     const GARBAGE_TOKEN: &str = "not-a-refresh-token";
     const PROBLEM_JSON: &str = "application/problem+json";

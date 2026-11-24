@@ -116,7 +116,7 @@ mod tests {
 
     const ALICE: &str = "alice";
     const BOB: &str = "bob";
-    const PASSWORD: &str = "correct horse";
+    const PASSWORD: &str = "correct horse battery staple";
     const WRONG_PASSWORD: &str = "wrong horse";
     const GARBAGE_TOKEN: &str = "not-a-refresh-token";
     const USER: UserId = UserId(Uuid::from_u128(1));
@@ -359,7 +359,7 @@ mod tests {
         }
 
         #[rstest]
-        #[case::username_at_the_limit(256, 8)]
+        #[case::username_at_the_limit(256, 15)]
         #[case::password_at_the_limit(5, 1024)]
         #[tokio::test]
         async fn at_the_length_limit_returns_tokens(
@@ -382,7 +382,7 @@ mod tests {
         }
 
         #[rstest]
-        #[case::username_too_long(257, 8)]
+        #[case::username_too_long(257, 15)]
         #[case::password_too_long(5, 1025)]
         #[tokio::test]
         async fn over_the_length_limit_returns_invalid_argument(
