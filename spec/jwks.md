@@ -11,18 +11,18 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
   - Assumes: the key provider's `PublishDelay` is longer than auth's `jwks_refresh_secs`.
   - Assumes: A4.
   - Why: fails today. The reload replaces the whole key set and can drop a brand-new key added since the fetch (`service/jwks.rs:30-31`). With two auth instances, only the one that received the new key lists it.
-- **J3** [test] The JWKS endpoint keeps serving the last loaded keys while the key provider is down. (pending)
+- **J3** [test] The JWKS endpoint keeps serving the last loaded keys while the key provider is down.
 - **J4** [test] The JWKS endpoint never lists an expired key. (pending)
   - Assumes: A1.
-- **J5** [test] Before the first full key load, the JWKS endpoint answers 503 with `Retry-After`. (pending)
+- **J5** [test] Before the first full key load, the JWKS endpoint answers 503 with `Retry-After`.
 - **J11** [test] When every loaded key has expired, the JWKS endpoint answers 503. (planned)
   - Why: J3 serves stale keys and J4 hides expired ones. After a long outage the list is empty.
 
 ## Format
 
-- **J7** [test] Every key in a JWKS response is an Ed25519 public key (`kty` OKP, `crv` Ed25519) with a `kid`. (pending)
+- **J7** [test] Every key in a JWKS response is an Ed25519 public key (`kty` OKP, `crv` Ed25519) with a `kid`.
   - Why: RFC 8725 3.1. Each key is used with one algorithm.
-- **J8** [test] No JWKS response contains a private key parameter. (pending)
+- **J8** [test] No JWKS response contains a private key parameter.
 
 ## Caching
 
