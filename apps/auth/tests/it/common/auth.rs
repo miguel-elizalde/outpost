@@ -21,7 +21,7 @@ use super::{
     redis,
 };
 
-pub const PASSWORD: &str = "correct horse";
+pub const PASSWORD: &str = "correct horse battery staple";
 pub const JWKS: &str = "/.well-known/jwks.json";
 
 pub struct Auth {

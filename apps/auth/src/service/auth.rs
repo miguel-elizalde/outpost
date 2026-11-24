@@ -8,10 +8,16 @@ use crate::{
 
 const MAX_USERNAME_CHARS: usize = 256;
 const MAX_PASSWORD_BYTES: usize = 1024;
+const MIN_PASSWORD_CHARS: usize = 15;
 
 fn too_long(username: &str, password: &SecretSlice<u8>) -> bool {
     username.chars().count() > MAX_USERNAME_CHARS
         || password.expose_secret().len() > MAX_PASSWORD_BYTES
+}
+
+fn too_short(password: &SecretSlice<u8>) -> bool {
+    !std::str::from_utf8(password.expose_secret())
+        .is_ok_and(|text| text.chars().count() >= MIN_PASSWORD_CHARS)
 }
 
 impl DefaultAuthService {
@@ -26,6 +32,9 @@ impl DefaultAuthService {
         }
         if too_long(&username, &password) {
             return Err(AuthServiceError::CredentialsTooLong);
+        }
+        if too_short(&password) {
+            return Err(AuthServiceError::PasswordTooShort);
         }
         let password_hash = self.passwords.hash(password).await?;
 

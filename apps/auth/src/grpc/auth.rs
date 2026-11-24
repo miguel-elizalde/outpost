@@ -116,7 +116,7 @@ mod tests {
 
     const ALICE: &str = "alice";
     const BOB: &str = "bob";
-    const PASSWORD: &str = "correct horse";
+    const PASSWORD: &str = "correct horse battery staple";
     const WRONG_PASSWORD: &str = "wrong horse";
     const GARBAGE_TOKEN: &str = "not-a-refresh-token";
     const USER: UserId = UserId(Uuid::from_u128(1));
@@ -359,7 +359,42 @@ mod tests {
         }
 
         #[rstest]
-        #[case::username_at_the_limit(256, 8)]
+        #[case::ascii_with_spaces("correct horses".to_owned())]
+        #[case::two_byte_characters("é".repeat(14))]
+        #[case::emoji("🐴".repeat(14))]
+        #[tokio::test]
+        async fn l15_password_of_14_code_points_returns_invalid_argument(#[case] password: String) {
+            // Arrange
+            let auth = TestAuth::new().build();
+
+            // Act
+            let result = register(&auth, ALICE, &password).await;
+
+            // Assert
+            expect_code(result, Code::InvalidArgument);
+        }
+
+        #[rstest]
+        #[case::ascii_with_spaces_15("correct horses!".to_owned())]
+        #[case::two_byte_characters_15("é".repeat(15))]
+        #[case::emoji_15("🐴".repeat(15))]
+        #[case::ascii_with_spaces_64("a b ".repeat(16))]
+        #[case::two_byte_characters_64("é".repeat(64))]
+        #[case::emoji_64("🐴".repeat(64))]
+        #[tokio::test]
+        async fn l16_password_of_15_to_64_code_points_returns_tokens(#[case] password: String) {
+            // Arrange
+            let auth = TestAuth::new().build();
+
+            // Act
+            let result = register(&auth, ALICE, &password).await;
+
+            // Assert
+            assert!(result.is_ok(), "register failed: {result:?}");
+        }
+
+        #[rstest]
+        #[case::username_at_the_limit(256, 15)]
         #[case::password_at_the_limit(5, 1024)]
         #[tokio::test]
         async fn at_the_length_limit_returns_tokens(
@@ -382,7 +417,7 @@ mod tests {
         }
 
         #[rstest]
-        #[case::username_too_long(257, 8)]
+        #[case::username_too_long(257, 15)]
         #[case::password_too_long(5, 1025)]
         #[tokio::test]
         async fn over_the_length_limit_returns_invalid_argument(

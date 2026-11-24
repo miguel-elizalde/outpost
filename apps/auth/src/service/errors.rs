@@ -20,6 +20,8 @@ pub enum AuthServiceError {
     MissingCredentials,
     #[error("Username or password is too long")]
     CredentialsTooLong,
+    #[error("Password is shorter than 15 characters")]
+    PasswordTooShort,
     #[error("Login refused: username or password is too long")]
     LoginTooLong,
     #[error("Username {0} already exists")]
