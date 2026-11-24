@@ -93,6 +93,28 @@ public sealed class StartupTests(PostgresFixture postgres)
         error.Failures.ShouldContain("'not a schedule' is not a valid cron expression.");
     }
 
+    [Theory]
+    [InlineData("JWT")]
+    [InlineData("AT+JWT")]
+    [InlineData("application/at+jwt")]
+    public async Task T6_Start_TypeOtherThanAtJwt_RefusesToStart(string type)
+    {
+        // Arrange
+        await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));
+        await using WebApplicationFactory<Program> misconfigured = service.WithWebHostBuilder(b =>
+            b.UseSetting("Signing:Type", type)
+        );
+
+        // Act
+        AggregateException error = Should.Throw<AggregateException>(() => misconfigured.Services);
+
+        // Assert
+        error.InnerExceptions.ShouldAllBe(inner =>
+            inner is OptionsValidationException
+            && ((OptionsValidationException)inner).OptionsType == typeof(SigningOptions)
+        );
+    }
+
     [Fact]
     public async Task Start_SigningSettingsGiven_UsesThem()
     {
