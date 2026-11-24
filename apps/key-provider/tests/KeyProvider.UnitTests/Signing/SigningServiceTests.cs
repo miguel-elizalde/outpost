@@ -175,4 +175,34 @@ public sealed class SigningServiceTests : IDisposable
         string? tokenId = TestKeys.Payload(token.Token).GetProperty("jti").GetString();
         tokenId.ShouldNotBeNull().ShouldMatch("^[0-9a-f]{32}$");
     }
+
+    [Fact]
+    public async Task K1_GenerateTokenAsync_ClockMovesBetweenReads_TokenExpiresBeforeItsKey()
+    {
+        // Arrange
+        TimeSpan lifetime = new SigningOptions().TokenLifetime;
+        DateTimeOffset keyExpiresAt = Now + lifetime + TimeSpan.FromSeconds(90);
+        _store.GetLatestKeyPairAsync(Arg.Any<CancellationToken>()).Returns(TestKeys.Create(KeyId, keyExpiresAt));
+        using SigningService signing = new(Options.Create(new SigningOptions()),
+            _services.GetRequiredService<IServiceScopeFactory>(), new AdvancingClock(Now, TimeSpan.FromMinutes(1)));
+
+        // Act
+        SignedToken token = await signing.GenerateTokenAsync(UserId, TestContext.Current.CancellationToken);
+
+        // Assert
+        long expiresAt = TestKeys.Payload(token.Token).GetProperty("exp").GetInt64();
+        expiresAt.ShouldBeLessThan(keyExpiresAt.ToUnixTimeSeconds());
+    }
+
+    private sealed class AdvancingClock(DateTimeOffset start, TimeSpan step) : TimeProvider
+    {
+        private DateTimeOffset _next = start;
+
+        public override DateTimeOffset GetUtcNow()
+        {
+            DateTimeOffset now = _next;
+            _next += step;
+            return now;
+        }
+    }
 }
