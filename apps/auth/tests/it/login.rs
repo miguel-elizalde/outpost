@@ -1,6 +1,4 @@
-mod common;
-
-use common::auth::{Auth, PASSWORD, code_of, subject_of};
+use crate::common::auth::{Auth, PASSWORD, code_of, subject_of};
 use pretty_assertions::assert_eq;
 use tonic::Code;
 

@@ -15,7 +15,7 @@ pub mod auth;
 pub mod http;
 pub mod key_stub;
 
-#[path = "../../src/proto.rs"]
+#[path = "../../../src/proto.rs"]
 pub mod proto;
 
 const SUPERUSER: &str = "postgres";
@@ -27,7 +27,7 @@ const TEMPLATE_DB: &str = "auth";
 pub const LABEL: (&str, &str) = ("outpost.tests", "auth");
 pub const REDIS_USER: &str = "auth";
 pub const REDIS_PASSWORD: &str = "redis-password";
-const AUTH_REDIS_RULES: &str = include_str!("../../redis/auth-user.acl");
+const AUTH_REDIS_RULES: &str = include_str!("../../../redis/auth-user.acl");
 
 pub fn redis_image() -> ContainerRequest<Redis> {
     let password = format!(">{REDIS_PASSWORD}");

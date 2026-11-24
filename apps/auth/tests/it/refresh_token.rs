@@ -1,6 +1,4 @@
-mod common;
-
-use common::auth::{Auth, code_of, millis, redis_expiry, redis_has, session_key};
+use crate::common::auth::{Auth, code_of, millis, redis_expiry, redis_has, session_key};
 use pretty_assertions::{assert_eq, assert_ne};
 use tonic::Code;
 

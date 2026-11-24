@@ -1,6 +1,4 @@
-mod common;
-
-use common::auth::{
+use crate::common::auth::{
     Auth, PASSWORD, code_of, micros, millis, redis_expiry, session_key, subject_of,
 };
 use pretty_assertions::assert_eq;

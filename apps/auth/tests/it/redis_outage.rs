@@ -1,8 +1,6 @@
-mod common;
-
 use std::time::{Duration, Instant};
 
-use common::{
+use crate::common::{
     auth::{Auth, PASSWORD, code_of},
     key_stub::KeyStubConfig,
     redis_image, wait_for_redis,
