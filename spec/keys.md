@@ -2,7 +2,7 @@
 
 The key provider creates Ed25519 key pairs on a schedule and signs access tokens for auth.
 
-Terms and assumptions `A1` to `A8` are in `shared.md`.
+Terms and assumptions are in `shared.md`.
 
 ## Signing
 

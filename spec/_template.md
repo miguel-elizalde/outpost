@@ -2,7 +2,7 @@
 
 What this area is, in one or two lines.
 
-Terms and assumptions `A1` to `A8` are in `shared.md`.
+Terms and assumptions are in `shared.md`.
 
 ## <Group>
 
