@@ -28,7 +28,7 @@ public sealed class RotationScheduleValidatorTests
         AttemptTimeout = TimeSpan.FromSeconds(10)
     };
 
-    private static readonly TimeSpan MinimumProductionLifespan = new(8, 18, 0);
+    private static readonly TimeSpan MinimumProductionLifespan = new(8, 23, 30);
 
     private static ValidateOptionsResult Validate(
         RotationScheduleOptions schedule, TimeSpan lifespan, RotationRetryOptions retry)
@@ -63,7 +63,7 @@ public sealed class RotationScheduleValidatorTests
         {
             Expression = "*/2 * * * *",
             MaxCheckDelay = TimeSpan.FromSeconds(30),
-            FailureRetryDelay = TimeSpan.FromSeconds(20)
+            FailureRetryDelay = TimeSpan.FromSeconds(5)
         };
 
         // Act
@@ -150,9 +150,9 @@ public sealed class RotationScheduleValidatorTests
         // Assert
         result.FailureMessage.ShouldBe(
             "KeyRotation:Lifespan (08:00:00) must be longer than the largest gap between schedule slots " +
-            "(08:00:00) plus KeyRotation:Schedule:FailureRetryDelay (00:05:00) plus the " +
-            "worst-case retry duration (00:05:00) plus Signing:TokenLifetime (00:05:00) plus " +
-            "Signing:PublishDelay (00:03:00).");
+            "(08:00:00) plus KeyRotation:Schedule:FailureRetryDelay (00:05:00) plus twice the " +
+            "worst-case retry duration (00:10:00) plus KeyRotation:Retry:AttemptTimeout (00:00:30) plus " +
+            "Signing:TokenLifetime (00:05:00) plus Signing:PublishDelay (00:03:00).");
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public sealed class RotationScheduleValidatorTests
     }
 
     [Fact]
-    public void Validate_LifespanEqualToTheMinimum_Fails()
+    public void K4_Validate_LifespanEqualToTheMinimum_Fails()
     {
         // Arrange
         RotationScheduleOptions schedule = new() { Expression = "0 */8 * * *" };
@@ -203,10 +203,38 @@ public sealed class RotationScheduleValidatorTests
 
         // Act
         ValidateOptionsResult result =
-            Validate(schedule, MinimumProductionLifespan + TimeSpan.FromSeconds(1), ProductionRetry);
+            Validate(schedule, new TimeSpan(8, 18, 1), ProductionRetry);
 
         // Assert
         result.Failed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void K17_Validate_SmallestGapTooShortForAFailedRoundAndItsRetry_Fails()
+    {
+        // Arrange
+        RotationScheduleOptions schedule = new() { Expression = "0,10 0 * * *" };
+
+        // Act
+        ValidateOptionsResult result = Validate(schedule, TimeSpan.FromDays(2), ProductionRetry);
+
+        // Assert
+        result.FailureMessage.ShouldBe(
+            "The smallest gap between schedule slots (00:10:00) must be longer than " +
+            "KeyRotation:Schedule:FailureRetryDelay (00:05:00) plus twice the worst-case retry duration (00:10:00).");
+    }
+
+    [Fact]
+    public void K17_Validate_SmallestGapLongerThanAFailedRoundAndItsRetry_Succeeds()
+    {
+        // Arrange
+        RotationScheduleOptions schedule = new() { Expression = "0,16 0 * * *" };
+
+        // Act
+        ValidateOptionsResult result = Validate(schedule, TimeSpan.FromDays(2), ProductionRetry);
+
+        // Assert
+        result.Succeeded.ShouldBeTrue();
     }
 
     [Fact]
