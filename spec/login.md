@@ -2,7 +2,7 @@
 
 Username and password accounts in Postgres.
 
-Terms and assumptions `A1` to `A8` are in `shared.md`.
+Terms and assumptions are in `shared.md`.
 
 ## Usernames
 
@@ -51,6 +51,8 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
   - Why: NIST SP 800-63B-4 3.2.2. An attacker can spend the attempts to lock a user out for one window. That is the trade.
 - **L20** [test] L19 counts attempts for a username that does not exist the same way. (planned)
   - Why: otherwise throttling reveals which usernames exist, which breaks L7.
+- **L30** [test] A throttled login returns a "too many attempts" error that says how long to wait. (planned)
+  - Why: a person who mistypes should know to wait. L20 keeps this from revealing which usernames exist.
 
 ## Password change
 

@@ -2,15 +2,15 @@
 
 How auth caches the key provider's public keys and serves them at `/.well-known/jwks.json`.
 
-Terms and assumptions `A1` to `A8` are in `shared.md`.
+Terms and assumptions are in `shared.md`.
 
 ## Serving
 
 - **J1** [tla, test] Auth returns an access token only after its signing key is in the Redis key cache. (pending)
 - **J2** [tla] Once the JWKS endpoint has returned a key list, every later list contains the key of every unexpired access token auth has issued. (planned)
   - Assumes: the key provider's `PublishDelay` is longer than auth's `jwks_refresh_secs`.
-  - Assumes: A4.
-  - Why: fails today. The reload replaces the whole key set and can drop a brand-new key added since the fetch (`service/jwks.rs:30-31`). With two auth instances, only the one that received the new key lists it.
+  - Assumes: A4. A9.
+  - Why: fails today. The reload replaces the whole key set and can drop a brand-new key added since the fetch (`service/jwks.rs:30-31`).
 - **J3** [test] The JWKS endpoint keeps serving the last loaded keys while the key provider is down.
 - **J4** [test] The JWKS endpoint never lists an expired key. (pending)
   - Assumes: A1.

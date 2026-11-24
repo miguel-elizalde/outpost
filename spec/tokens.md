@@ -2,7 +2,7 @@
 
 The JWTs auth returns from login and refresh. The key provider signs them.
 
-Terms and assumptions `A1` to `A8` are in `shared.md`.
+Terms and assumptions are in `shared.md`.
 
 ## Signature
 

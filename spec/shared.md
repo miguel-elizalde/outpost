@@ -22,6 +22,7 @@ Terms, assumptions and non-goals for every file in `spec/`. No rules live here.
 - A6. Only auth can reach the key provider's sign call. Delete this once K11 is checked.
 - A7. Redis runs a `MULTI` transaction as one step.
 - A8. Only auth and the key provider write to Redis and Postgres.
+- A9. Exactly one auth instance runs.
 
 ## Non-goals
 
