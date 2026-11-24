@@ -31,8 +31,8 @@ Terms and assumptions are in `shared.md`.
 - **K5** [test] Key pair and rotation job rows can never be updated, deleted or truncated.
 - **K6** [test] A key pair can only be saved with a successful rotation job.
 - **K7** [test] Private keys are stored only after Data Protection encrypts them.
-- **K8** [test] No gRPC response from the key provider contains a private key. (pending)
-- **K10** [test] No two key pairs ever have the same key ID. (pending)
+- **K8** [test] No gRPC response from the key provider contains a private key.
+- **K10** [test] No two key pairs ever have the same key ID.
 
 ## Listing
 
