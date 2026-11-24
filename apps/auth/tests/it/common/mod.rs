@@ -25,9 +25,16 @@ pub const APP_PASSWORD: &str = "app-password";
 const MIGRATOR_PASSWORD: &str = "migrator-password";
 const TEMPLATE_DB: &str = "auth";
 pub const LABEL: (&str, &str) = ("outpost.tests", "auth");
+const RUN_LABEL: &str = "outpost.tests.run";
+const RUN_ENV: &str = "OUTPOST_TEST_RUN";
+const DEFAULT_RUN: &str = "local";
 pub const REDIS_USER: &str = "auth";
 pub const REDIS_PASSWORD: &str = "redis-password";
 const AUTH_REDIS_RULES: &str = include_str!("../../../redis/auth-user.acl");
+
+fn run_id() -> String {
+    std::env::var(RUN_ENV).unwrap_or_else(|_| DEFAULT_RUN.to_owned())
+}
 
 pub fn redis_image() -> ContainerRequest<Redis> {
     let password = format!(">{REDIS_PASSWORD}");
@@ -40,6 +47,7 @@ pub fn redis_image() -> ContainerRequest<Redis> {
     Redis::default()
         .with_tag("8")
         .with_label(LABEL.0, LABEL.1)
+        .with_label(RUN_LABEL, run_id())
         .with_cmd(cmd)
 }
 
@@ -67,6 +75,7 @@ async fn start_infra() -> Infra {
         .with_env_var("APP_PASSWORD", APP_PASSWORD)
         .with_copy_to("/docker-entrypoint-initdb.d/00-users.sh", users_script)
         .with_label(LABEL.0, LABEL.1)
+        .with_label(RUN_LABEL, run_id())
         .start()
         .await
         .expect("start postgres");

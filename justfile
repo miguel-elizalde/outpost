@@ -6,6 +6,7 @@ key_tests := "apps/key-provider/tests/KeyProvider.UnitTests"
 key_it := "apps/key-provider/tests/KeyProvider.IntegrationTests"
 key_scripts := "apps/key-provider/db/scripts"
 key_port := "5210"
+test_run := uuid()
 generated := "apps/key-provider/src/Api/Generated examples/python-client/gen " + key_scripts
 
 default:
@@ -111,20 +112,20 @@ auth-test:
 
 [group('auth')]
 auth-it:
-    trap 'docker rm -f $(docker ps -aq --filter label=outpost.tests=auth) >/dev/null 2>&1 || true' EXIT; \
-    SQLX_OFFLINE=true cargo test -p auth --test '*'
+    trap 'docker rm -f $(docker ps -aq --filter label=outpost.tests=auth --filter label=outpost.tests.run={{test_run}}) >/dev/null 2>&1 || true' EXIT; \
+    OUTPOST_TEST_RUN={{test_run}} SQLX_OFFLINE=true cargo test -p auth --test '*'
 
 [group('auth')]
 auth-mutants *args:
-    trap 'docker rm -f $(docker ps -aq --filter label=outpost.tests=auth) >/dev/null 2>&1 || true' EXIT; \
-    SQLX_OFFLINE=true cargo mutants --package auth {{args}}
+    trap 'docker rm -f $(docker ps -aq --filter label=outpost.tests=auth --filter label=outpost.tests.run={{test_run}}) >/dev/null 2>&1 || true' EXIT; \
+    OUTPOST_TEST_RUN={{test_run}} SQLX_OFFLINE=true cargo mutants --package auth {{args}}
 
 [group('auth')]
 auth-mutants-diff *args:
     diff=$(mktemp); \
-    trap 'rm -f "$diff"; docker rm -f $(docker ps -aq --filter label=outpost.tests=auth) >/dev/null 2>&1 || true' EXIT; \
+    trap 'rm -f "$diff"; docker rm -f $(docker ps -aq --filter label=outpost.tests=auth --filter label=outpost.tests.run={{test_run}}) >/dev/null 2>&1 || true' EXIT; \
     git diff main -- apps/auth > "$diff"; \
-    SQLX_OFFLINE=true cargo mutants --package auth --in-diff "$diff" {{args}}
+    OUTPOST_TEST_RUN={{test_run}} SQLX_OFFLINE=true cargo mutants --package auth --in-diff "$diff" {{args}}
 
 [group('key-provider')]
 key-run:
