@@ -1,6 +1,4 @@
-mod common;
-
-use common::{
+use crate::common::{
     app::{App, free_address},
     auth::{Auth, PASSWORD, code_of, jwk_key, redis_delete, redis_expiry, redis_has, redis_json},
     fresh_db,

@@ -1,6 +1,4 @@
-mod common;
-
-use common::{
+use crate::common::{
     auth::{Auth, JWKS, PASSWORD},
     http,
     key_stub::{AUDIENCE, ISSUER, KeyStubConfig},

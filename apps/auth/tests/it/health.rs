@@ -1,6 +1,4 @@
-mod common;
-
-use common::{auth::Auth, http};
+use crate::common::{auth::Auth, http};
 use hyper::StatusCode;
 use pretty_assertions::assert_eq;
 use tonic::transport::Channel;
