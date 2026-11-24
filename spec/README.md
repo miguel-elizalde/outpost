@@ -101,6 +101,6 @@ It only proves the check exists. Whether it means what the rule says is my revie
 - Do not weaken a statement, invariant or assumption to make a check pass.
 - For a `(pending)` rule: build the check. If it fails against the code, stop and say so. Do not change the code or the rule.
 - For a `(planned)` rule: build the check first and show it failing. Then change the code until it passes. Both land in one PR.
-- One rule per PR, or one TLA+ model with the rules it covers.
+- One fix or one model per PR. The issue names the rules and tags it covers.
 - If a rule looks wrong or impossible, stop and say so.
 - Every model needs a test that drives the real code into the same case.
