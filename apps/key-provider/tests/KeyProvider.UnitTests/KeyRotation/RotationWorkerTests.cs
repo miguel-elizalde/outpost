@@ -227,6 +227,33 @@ public sealed class RotationWorkerTests
     }
 
     [Fact]
+    public async Task K3_RunOnceAsync_SlotFailsThenRetrySucceeds_RotatesAgainAfterFailureRetryDelay()
+    {
+        // Arrange
+        LastRotationFinishedAt(Now.AddHours(-8));
+        List<DateTimeOffset> rotatedAt = [];
+        _rotation.RotateAsync(Arg.Any<CancellationToken>()).Returns(
+            _ =>
+            {
+                rotatedAt.Add(_clock.GetUtcNow());
+                return new KeyRotationFailed(Now, Now, "database down", IsTransient: true);
+            },
+            _ =>
+            {
+                rotatedAt.Add(_clock.GetUtcNow());
+                return new KeyRotationSucceeded(Now, Now, Guid.Empty);
+            });
+        RotationWorker sut = CreateWorker();
+        _clock.Advance(await sut.RunOnceAsync(TestContext.Current.CancellationToken));
+
+        // Act
+        await sut.RunOnceAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        rotatedAt.ShouldBe([Now, Now + FailureRetryDelay]);
+    }
+
+    [Fact]
     public async Task StartAsync_NothingDue_WaitsBeforeCheckingAgain()
     {
         // Arrange
