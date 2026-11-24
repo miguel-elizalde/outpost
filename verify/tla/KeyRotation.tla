@@ -10,13 +10,16 @@ CONSTANTS
     AttemptTimeout,
     WorstCaseRetry,
     MaxTime,
-    SignerReadsClockTwice
+    SignerReadsClockTwice,
+    ValidatorCountsRetryOnce
 
 ASSUME ValidConfig ==
     /\ Gap > FailureRetryDelay + 2 * WorstCaseRetry
     /\ WorstCaseRetry >= AttemptTimeout
     /\ AttemptTimeout >= 1
-    /\ Lifespan > Gap + FailureRetryDelay + WorstCaseRetry + TokenLifetime + PublishDelay
+    /\ IF ValidatorCountsRetryOnce
+          THEN Lifespan > Gap + FailureRetryDelay + WorstCaseRetry + TokenLifetime + PublishDelay
+          ELSE Lifespan > Gap + FailureRetryDelay + 2 * WorstCaseRetry + AttemptTimeout + TokenLifetime + PublishDelay
 
 None == [none |-> TRUE]
 Forever == MaxTime + 1
@@ -88,6 +91,8 @@ RoundSucceeds ==
     /\ slotFailed' = FALSE
     /\ UNCHANGED <<now, roundStart, cache, pending, token>>
 
+FirstKeyOlderThanPublishDelay(t) == \E k \in keys : t - k.created > PublishDelay
+
 Reusable(t) == cache # None /\ t < cache.until /\ CanSign(cache.key, t)
 
 PublishedKeys(t) == {k \in keys : Published(k, t)}
@@ -103,17 +108,20 @@ SignStarts ==
     /\ keys # {}
     /\ IF Reusable(now)
           THEN /\ pending' = [key |-> cache.key, at |-> now,
-                              publishedCanSign |-> \E k \in keys : Published(k, now) /\ CanSign(k, now)]
+                              publishedCanSign |-> \E k \in keys : Published(k, now) /\ CanSign(k, now),
+                              firstKeyOlder |-> FirstKeyOlderThanPublishDelay(now)]
                /\ UNCHANGED cache
           ELSE /\ CanSign(Fresh(now), now)
                /\ cache' = [key |-> Fresh(now), until |-> ReusableUntil(now)]
                /\ pending' = [key |-> Fresh(now), at |-> now,
-                              publishedCanSign |-> \E k \in keys : Published(k, now) /\ CanSign(k, now)]
+                              publishedCanSign |-> \E k \in keys : Published(k, now) /\ CanSign(k, now),
+                              firstKeyOlder |-> FirstKeyOlderThanPublishDelay(now)]
     /\ UNCHANGED <<now, keys, lastFinish, phase, wake, roundStart, slotFailed, token>>
 
 SignFinishes ==
     /\ pending # None
     /\ token' = [key |-> pending.key, at |-> pending.at, publishedCanSign |-> pending.publishedCanSign,
+                  firstKeyOlder |-> pending.firstKeyOlder,
                   expires |-> (IF SignerReadsClockTwice THEN now ELSE pending.at) + TokenLifetime]
     /\ pending' = None
     /\ UNCHANGED <<now, keys, lastFinish, phase, wake, roundStart, slotFailed, cache>>
@@ -141,5 +149,8 @@ K2_SignsWithAPublishedKeyWhenOneCanSign ==
     token # None /\ token.publishedCanSign => Published(token.key, token.at)
 
 K3_AlwaysHasAKeyThatCanSign == keys # {} => \E k \in keys : CanSign(k, now)
+
+K16_NeverSignsWithAKeyYoungerThanPublishDelay ==
+    token # None /\ token.firstKeyOlder => token.at - token.key.created >= PublishDelay
 
 =============================================================================
