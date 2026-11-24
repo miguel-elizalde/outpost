@@ -8,7 +8,7 @@ const ALICE: &str = "alice";
 const WRONG_PASSWORD: &str = "wrong horse";
 
 #[tokio::test]
-async fn right_password_returns_an_access_token_for_the_user() {
+async fn l9_t3_right_password_returns_an_access_token_for_the_user() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
@@ -37,7 +37,7 @@ async fn wrong_password_returns_unauthenticated() {
 }
 
 #[tokio::test]
-async fn username_in_another_case_logs_in_to_the_same_account() {
+async fn l1_username_in_another_case_logs_in_to_the_same_account() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
@@ -53,7 +53,7 @@ async fn username_in_another_case_logs_in_to_the_same_account() {
 }
 
 #[tokio::test]
-async fn username_with_surrounding_spaces_logs_in_to_the_same_account() {
+async fn l28_username_with_surrounding_spaces_logs_in_to_the_same_account() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
@@ -84,7 +84,7 @@ async fn unknown_username_returns_the_same_error_as_a_wrong_password() {
 }
 
 #[tokio::test]
-async fn switched_off_account_returns_unauthenticated() {
+async fn l6_switched_off_account_returns_unauthenticated() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;

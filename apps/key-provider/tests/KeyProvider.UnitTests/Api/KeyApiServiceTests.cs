@@ -103,7 +103,7 @@ public sealed class KeyApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SignToken_ValidSubject_HeaderNamesTheAlgorithmTypeAndKey()
+    public async Task T2_SignToken_ValidSubject_HeaderNamesTheAlgorithmTypeAndKey()
     {
         // Arrange
         LatestKeyIs(KeyId, Now.AddDays(1));
@@ -119,7 +119,7 @@ public sealed class KeyApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SignToken_ValidSubject_ClaimsNameTheUserAndExpireAfterTheTokenLifetime()
+    public async Task K12_SignToken_ValidSubject_ClaimsNameTheUserAndExpireAfterTheTokenLifetime()
     {
         // Arrange
         LatestKeyIs(KeyId, Now.AddDays(1));

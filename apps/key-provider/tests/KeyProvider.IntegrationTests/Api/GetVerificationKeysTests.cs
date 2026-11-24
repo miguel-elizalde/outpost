@@ -40,7 +40,7 @@ public sealed class GetVerificationKeysTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task GetVerificationKeys_TwoLiveKeys_ReturnsBothOldestFirst()
+    public async Task K9_K15_GetVerificationKeys_TwoLiveKeys_ReturnsBothOldestFirst()
     {
         // Arrange
         await using ServiceFactory service = await StartAsync();
@@ -56,7 +56,7 @@ public sealed class GetVerificationKeysTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task GetVerificationKeys_OneExpiredAndOneLiveKey_ReturnsOnlyTheLiveKey()
+    public async Task K14_GetVerificationKeys_OneExpiredAndOneLiveKey_ReturnsOnlyTheLiveKey()
     {
         // Arrange
         await using ServiceFactory service = await StartAsync();

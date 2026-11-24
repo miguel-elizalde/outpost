@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn jwks_before_first_load_returns_503_with_retry_after() {
+    async fn j5_jwks_before_first_load_returns_503_with_retry_after() {
         // Arrange
         let app = app_with(LocalJwkSet::default());
 
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn jwks_after_load_returns_the_live_keys_with_cache_control() {
+    async fn j7_j8_jwks_after_load_returns_the_live_keys_with_cache_control() {
         // Arrange
         let local_jwks = LocalJwkSet::default();
         local_jwks.replace(vec![signing_key()]);

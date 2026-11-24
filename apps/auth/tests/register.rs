@@ -10,7 +10,7 @@ const ALICE: &str = "alice";
 const DAY_MICROS: i64 = 24 * 60 * 60 * 1_000_000;
 
 #[tokio::test]
-async fn new_username_returns_an_access_token_for_the_new_user() {
+async fn t3_new_username_returns_an_access_token_for_the_new_user() {
     // Arrange
     let auth = Auth::start().await;
 
@@ -68,7 +68,7 @@ async fn new_username_session_ends_23_days_after_the_first_refresh_token_does() 
 }
 
 #[tokio::test]
-async fn taken_username_returns_already_exists() {
+async fn l2_taken_username_returns_already_exists() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
@@ -81,7 +81,7 @@ async fn taken_username_returns_already_exists() {
 }
 
 #[tokio::test]
-async fn taken_username_keeps_the_first_password() {
+async fn l2_taken_username_keeps_the_first_password() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
@@ -167,7 +167,7 @@ async fn empty_password_returns_invalid_argument() {
 }
 
 #[tokio::test]
-async fn username_differing_only_in_case_returns_already_exists() {
+async fn l2_username_differing_only_in_case_returns_already_exists() {
     // Arrange
     let auth = Auth::start().await;
     auth.sign_up(ALICE).await;
