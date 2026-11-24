@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using Google.Protobuf;
+
 using Grpc.Core;
 
 using KeyProvider.Api;
@@ -288,5 +290,37 @@ public sealed class KeyApiServiceTests : IDisposable
         response.Keys.Select(k => k.KeyId).ShouldBe([KeyId.ToString(), NewerKeyId.ToString()]);
         response.Keys.Select(k => k.PublicKey.ToByteArray()).ShouldBe([older.PublicKey, newer.PublicKey]);
         response.Keys.Select(k => k.ExpiresAt.ToDateTimeOffset()).ShouldBe([Now.AddHours(1), Now.AddDays(1)]);
+    }
+
+    [Fact]
+    public async Task K8_SignToken_FirstTokenWithAKey_ResponseHoldsNoPrivateKey()
+    {
+        // Arrange
+        SigningKeyPair keys = LatestKeyIs(KeyId, Now.AddDays(1));
+
+        // Act
+        SignTokenResponse response = await SignTokenAsync(UserId.ToString());
+
+        // Assert
+        response.VerificationKey.ShouldNotBeNull();
+        response.ToByteArray().AsSpan().IndexOf(keys.PrivateKey.PrivateKey).ShouldBe(-1);
+    }
+
+    [Fact]
+    public async Task K8_GetVerificationKeys_KeysInStore_ResponseHoldsNoPrivateKey()
+    {
+        // Arrange
+        SigningKeyPair older = TestKeys.Create(KeyId, Now.AddHours(1));
+        SigningKeyPair newer = TestKeys.Create(NewerKeyId, Now.AddDays(1));
+        _store.GetVerificationKeysAsync(Arg.Any<CancellationToken>()).Returns([older.PublicKey, newer.PublicKey]);
+
+        // Act
+        GetVerificationKeysResponse response = await GetVerificationKeysAsync();
+
+        // Assert
+        byte[] bytes = response.ToByteArray();
+        response.Keys.Count.ShouldBe(2);
+        bytes.AsSpan().IndexOf(older.PrivateKey.PrivateKey).ShouldBe(-1);
+        bytes.AsSpan().IndexOf(newer.PrivateKey.PrivateKey).ShouldBe(-1);
     }
 }

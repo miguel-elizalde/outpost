@@ -7,6 +7,7 @@ using KeyProvider.SigningKeys;
 using KeyProvider.UnitTests;
 
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using Npgsql;
@@ -254,5 +255,51 @@ public sealed class KeyStorageTests(PostgresFixture postgres)
 
         // Assert
         error.SqlState.ShouldBe(DatabaseErrorCodes.RotationJobNotSuccessful);
+    }
+
+    [Fact]
+    public async Task K10_SaveKeyPairAsync_KeyIdAlreadyStored_IsRefusedByTheDatabase()
+    {
+        // Arrange
+        await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));
+        Guid keyId = Guid.CreateVersion7();
+        await using (AsyncServiceScope first = service.Services.CreateAsyncScope())
+        {
+            await first
+                .ServiceProvider.GetRequiredService<IKeyPairStore>()
+                .SaveKeyPairAsync(SuccessfulKeyPair(keyId), _ct);
+        }
+
+        await using AsyncServiceScope second = service.Services.CreateAsyncScope();
+        IKeyPairStore store = second.ServiceProvider.GetRequiredService<IKeyPairStore>();
+
+        // Act
+        DbUpdateException error = await Should.ThrowAsync<DbUpdateException>(() =>
+            store.SaveKeyPairAsync(SuccessfulKeyPair(keyId), _ct)
+        );
+
+        // Assert
+        PostgresException violation = error.InnerException.ShouldBeOfType<PostgresException>();
+        violation.SqlState.ShouldBe(PostgresErrorCodes.UniqueViolation);
+        violation.ConstraintName.ShouldBe("pk_key_pair_record");
+    }
+
+    private static KeyPairRecord SuccessfulKeyPair(Guid keyId)
+    {
+        KeyRotationJob job = new()
+        {
+            KeyPairRotationJobId = Guid.CreateVersion7(),
+            StartedAt = ServiceFactory.Start,
+            Success = true,
+        };
+        return new KeyPairRecord
+        {
+            KeyPairId = keyId,
+            PublicKey = new byte[Ed25519PublicKeyParameters.KeySize],
+            PrivateKey = [0],
+            ExpiresAt = ServiceFactory.Start.AddDays(1),
+            KeyPairRotationJobId = job.KeyPairRotationJobId,
+            RotationJob = job,
+        };
     }
 }
