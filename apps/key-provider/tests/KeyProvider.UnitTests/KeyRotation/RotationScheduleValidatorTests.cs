@@ -196,6 +196,20 @@ public sealed class RotationScheduleValidatorTests
     }
 
     [Fact]
+    public void K4_Validate_LifespanCoversTheWorstCaseRetryOnlyOnce_Fails()
+    {
+        // Arrange
+        RotationScheduleOptions schedule = new() { Expression = "0 */8 * * *" };
+
+        // Act
+        ValidateOptionsResult result =
+            Validate(schedule, MinimumProductionLifespan + TimeSpan.FromSeconds(1), ProductionRetry);
+
+        // Assert
+        result.Failed.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Validate_ScheduleWithALongGapAfterManyQuickSlots_Fails()
     {
         // Arrange
