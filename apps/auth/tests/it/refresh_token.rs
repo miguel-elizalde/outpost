@@ -34,17 +34,19 @@ async fn valid_token_new_session_in_redis_expires_when_the_new_token_does() {
 }
 
 #[tokio::test]
-async fn valid_token_is_remembered_until_it_would_have_expired() {
+async fn r4_swapped_token_is_remembered_until_its_session_ends() {
     // Arrange
     let auth = Auth::start().await;
     let token = auth.sign_up(ALICE).await.refresh_token;
-    let expiry = redis_expiry(&session_key(&token)).await;
 
     // Act
     auth.refresh(&token).await.unwrap();
 
     // Assert
-    assert_eq!(redis_expiry(&session_key(&token)).await, expiry);
+    assert_eq!(
+        redis_expiry(&session_key(&token)).await,
+        auth.session_limit(ALICE).await.timestamp_millis()
+    );
 }
 
 #[tokio::test]

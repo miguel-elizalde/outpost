@@ -256,8 +256,7 @@ impl RefreshTokenStore for InMemoryRefreshTokens {
         let previous = self.live_entry(old);
         if previous.is_some() {
             let mut entries = self.entries.lock().unwrap();
-            let (entry, _) = entries.get_mut(old).unwrap();
-            *entry = Entry::Rotated;
+            entries.insert(*old, (Entry::Rotated, new.family_exp));
         }
         self.save(new);
         Ok(previous)
