@@ -24,9 +24,9 @@ Terms and assumptions are in `shared.md`.
   - Why: NIST SP 800-63B-4 3.1.1.2 requires a salt.
 - **L12** [test] Login fails for a password that differs from the registered one only in its last byte, at the maximum length. (pending)
   - Why: NIST requires verifying the whole password, with no truncation.
-- **L15** [test] Register rejects a password shorter than 15 Unicode code points. (planned)
+- **L15** [test] Register rejects a password shorter than 15 Unicode code points.
   - Why: NIST SP 800-63B-4 3.1.1.2, the minimum for password-only login.
-- **L16** [test] Register accepts every password of 15 to 64 code points that L18 does not reject, including spaces and Unicode. (pending)
+- **L16** [test] Register accepts every password of 15 to 64 code points that L18 does not reject, including spaces and Unicode.
   - Why: NIST forbids composition rules.
 - **L17** [test] A password logs in whether its Unicode characters arrive composed or decomposed. (planned)
   - Why: NIST recommends NFC normalization before hashing.
