@@ -18,24 +18,28 @@ use super::{
     proto::auth::v1::{LogoutRequest, auth_service_client::AuthServiceClient},
 };
 
-pub const PEPPER: &str = "test-pepper";
+pub(crate) const PEPPER: &str = "test-pepper";
 
 const BIND_ATTEMPTS: u32 = 5;
 const PORT_TAKEN: &str = "Address already in use";
 
-pub struct App {
+pub(crate) struct App {
     _child: Child,
     client: AuthServiceClient<Channel>,
-    pub grpc_addr: SocketAddr,
-    pub http_addr: SocketAddr,
+    pub(crate) grpc_addr: SocketAddr,
+    pub(crate) http_addr: SocketAddr,
 }
 
 impl App {
-    pub async fn start(db: &str, key_provider: SocketAddr) -> Self {
+    pub(crate) async fn start(db: &str, key_provider: SocketAddr) -> Self {
         Self::start_with(db, key_provider, &[]).await
     }
 
-    pub async fn start_with(db: &str, key_provider: SocketAddr, settings: &[(&str, &str)]) -> Self {
+    pub(crate) async fn start_with(
+        db: &str,
+        key_provider: SocketAddr,
+        settings: &[(&str, &str)],
+    ) -> Self {
         for _ in 0..BIND_ATTEMPTS {
             if let Some(app) = Self::try_start(db, key_provider, settings).await {
                 return app;
@@ -54,7 +58,10 @@ impl App {
         let (mut child, stderr) = spawn(db, key_provider, addr, http_addr, settings).await;
         let deadline = tokio::time::Instant::now() + Duration::from_secs(30);
         loop {
-            if let Some(status) = child.try_wait().unwrap() {
+            if let Some(status) = child
+                .try_wait()
+                .expect("polling a spawned child does not fail")
+            {
                 if stderr
                     .await
                     .expect("stderr reader only ends when the stream closes")
@@ -81,7 +88,7 @@ impl App {
         }
     }
 
-    pub fn client(&self) -> AuthServiceClient<Channel> {
+    pub(crate) fn client(&self) -> AuthServiceClient<Channel> {
         self.client.clone()
     }
 }
@@ -134,11 +141,12 @@ async fn spawn(
         .kill_on_drop(true)
         .spawn()
         .expect("start auth");
-    forward_output(child.stdout.take().unwrap());
+    forward_output(child.stdout.take().expect("stdout is piped above"));
     let stderr = forward_output(child.stderr.take().expect("stderr is piped above"));
     (child, stderr)
 }
 
+#[expect(clippy::print_stdout, reason = "shows auth's output in test logs")]
 fn forward_output(stream: impl AsyncRead + Unpin + Send + 'static) -> JoinHandle<bool> {
     tokio::spawn(async move {
         let mut port_taken = false;
@@ -151,10 +159,10 @@ fn forward_output(stream: impl AsyncRead + Unpin + Send + 'static) -> JoinHandle
     })
 }
 
-pub fn free_address() -> SocketAddr {
-    let [a, b, c, ..] = *Uuid::new_v4().as_bytes();
-    std::net::TcpListener::bind((Ipv4Addr::new(127, a, b, c.max(1)), 0))
-        .unwrap()
+pub(crate) fn free_address() -> SocketAddr {
+    let [second, third, fourth, ..] = *Uuid::new_v4().as_bytes();
+    std::net::TcpListener::bind((Ipv4Addr::new(127, second, third, fourth.max(1)), 0))
+        .expect("port 0 on a loopback address is always bindable")
         .local_addr()
-        .unwrap()
+        .expect("a bound listener has a local address")
 }
