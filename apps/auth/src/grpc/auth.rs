@@ -375,6 +375,25 @@ mod tests {
         }
 
         #[rstest]
+        #[case::ascii_with_spaces_15("correct horses!".to_owned())]
+        #[case::two_byte_characters_15("é".repeat(15))]
+        #[case::emoji_15("🐴".repeat(15))]
+        #[case::ascii_with_spaces_64("a b ".repeat(16))]
+        #[case::two_byte_characters_64("é".repeat(64))]
+        #[case::emoji_64("🐴".repeat(64))]
+        #[tokio::test]
+        async fn l16_password_of_15_to_64_code_points_returns_tokens(#[case] password: String) {
+            // Arrange
+            let auth = TestAuth::new().build();
+
+            // Act
+            let result = register(&auth, ALICE, &password).await;
+
+            // Assert
+            assert!(result.is_ok(), "register failed: {result:?}");
+        }
+
+        #[rstest]
         #[case::username_at_the_limit(256, 15)]
         #[case::password_at_the_limit(5, 1024)]
         #[tokio::test]
