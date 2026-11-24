@@ -7,7 +7,7 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 ## Signature
 
 - **T1** [test] Every access token auth returns verifies with the public key the JWKS lists under the token's `kid`. (pending)
-- **T2** [test] Every access token's header says `alg` EdDSA. (pending)
+- **T2** [test] Every access token's header says `alg` EdDSA.
   - Assumes: T9.
   - Why: RFC 8725 3.1 and 3.2.
 - **T9** [test] The key provider refuses to start when `Signing:Algorithm` is not `EdDSA`. (planned)
@@ -17,7 +17,7 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Claims
 
-- **T3** [test] An access token returned by register or login has `sub` equal to the ID of the user whose username and password were presented. (pending)
+- **T3** [test] An access token returned by register or login has `sub` equal to the ID of the user whose username and password were presented.
 - **T5** [test] Every access token's `iss` equals the key provider's `Signing:Issuer`. (pending)
   - Why: RFC 8725 3.8.
 - **T7** [test] Every access token's `aud` equals the audience named in the login request. (planned)

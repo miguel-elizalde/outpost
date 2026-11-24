@@ -12,7 +12,7 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
   - Assumes: A3. A7.
 - **R3** [tla, lean] At any time, each family has at most one live token. (pending)
   - Assumes: A3. A7.
-- **R14** [test] A refresh with a family's live token succeeds. (pending)
+- **R14** [test] A refresh with a family's live token succeeds.
   - Assumes: the user is active. Redis, Postgres and the key provider are reachable.
 - **R15** [test] An access token returned by a refresh has the same `sub` as the access token from the register or login that created the family. (pending)
 - **R16** [test] A login does not stop the user's other families from refreshing. (pending)
@@ -39,7 +39,7 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 - **R21** [kani] Computing a token's expiry and a family's expiry never panics. (planned)
   - Assumes: the clock is between 2020 and 2200. The settings passed R22.
   - Why: chrono's `+` panics on overflow (`service/refresh_token.rs:75-76, 114`). Needs the math in a pure function first.
-- **R22** [test] Auth refuses to start when `max_age_secs` or `idle_timeout_secs` is zero or more than 365 days. (pending)
+- **R22** [test] Auth refuses to start when `max_age_secs` or `idle_timeout_secs` is zero or more than 365 days.
 
 ## Logout
 
@@ -51,13 +51,13 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Inactive users
 
-- **R11** [test] A refresh for a user marked inactive fails. (pending)
-- **R26** [test] After a refresh fails because the user is inactive, no refresh in that family ever succeeds. (pending)
+- **R11** [test] A refresh for a user marked inactive fails.
+- **R26** [test] After a refresh fails because the user is inactive, no refresh in that family ever succeeds.
 
 ## Outages
 
-- **R17** [test] While Redis is unreachable, no refresh succeeds. (pending)
-- **R18** [test] While Postgres is unreachable, no refresh succeeds. (pending)
+- **R17** [test] While Redis is unreachable, no refresh succeeds.
+- **R18** [test] While Postgres is unreachable, no refresh succeeds.
 
 ## Storage and secrets
 

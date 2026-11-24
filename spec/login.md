@@ -6,10 +6,10 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Usernames
 
-- **L1** [test] Usernames match ignoring ASCII case. (pending)
-- **L28** [test] Usernames match ignoring leading or trailing whitespace. (pending)
-- **L2** [test] Registering a username that already exists, in any case, fails and leaves the first account unchanged. (pending)
-- **L26** [test] Register rejects a username that is empty after trimming whitespace. (pending)
+- **L1** [test] Usernames match ignoring ASCII case.
+- **L28** [test] Usernames match ignoring leading or trailing whitespace.
+- **L2** [test] Registering a username that already exists, in any case, fails and leaves the first account unchanged.
+- **L26** [test] Register rejects a username that is empty after trimming whitespace.
 - **L27** [test] Register rejects a username with any character outside `a-z`, `0-9`, `.`, `_` and `-`, after lowercasing. (planned)
   - Why: ASCII-only names remove lookalike usernames and make L1 exact.
 
@@ -36,12 +36,12 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Login
 
-- **L8** [test] Login with the right password for an active user succeeds. (pending)
+- **L8** [test] Login with the right password for an active user succeeds.
   - Assumes: Redis, Postgres and the key provider are reachable.
-- **L9** [test] After a successful register, login with the same username and password succeeds. (pending)
+- **L9** [test] After a successful register, login with the same username and password succeeds.
   - Assumes: Redis, Postgres and the key provider are reachable.
 - **L5** [test] Login for an unknown username runs one password verify, the same work as for a known username. (pending)
-- **L6** [test] Login with the right password for an inactive user fails. (pending)
+- **L6** [test] Login with the right password for an inactive user fails.
 - **L7** [test] Login returns the same error to the client for an unknown user, a wrong password, an inactive user and over-long input. (pending)
 
 ## Throttling
