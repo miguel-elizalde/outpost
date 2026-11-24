@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Every unmarked rule in spec/ must have one check per tag, named with its ID.
-# Usage: check-rule-ids.sh [--ready]   --ready also lists marked rules whose checks already exist.
+# Usage: check-rule-ids.sh [--ready]   --ready also says, for each marked rule, which checks exist and which are missing.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 ready="${1:-}"
@@ -68,12 +68,13 @@ for file in spec/*.md; do
     fi
 
     gaps=""
+    lack=""
     for tag in $tags; do
       why="$(missing "$id" "$lower" "$tag")"
-      [ -z "$why" ] || gaps="${gaps}FAIL $id [$tag]: $why"$'\n'
+      [ -z "$why" ] || { gaps="${gaps}FAIL $id [$tag]: $why"$'\n'; lack="$lack $tag"; }
     done
     if [ -n "$marker" ]; then
-      if [ -z "$gaps" ]; then echo "$marker $id (checks found, ready for review)"; else echo "$marker $id"; fi
+      if [ -z "$gaps" ]; then echo "$marker $id (checks found, ready for review)"; else echo "$marker $id (missing:$lack)"; fi
       if [ "$marker" = pending ]; then pending=$((pending + 1)); else planned=$((planned + 1)); fi
     elif [ -n "$gaps" ]; then
       printf '%s' "$gaps"; fail=1

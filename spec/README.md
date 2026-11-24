@@ -12,7 +12,8 @@ I approve every rule. Agents can propose rules in a PR and build the checks in `
 | `(pending)` | The code should already do it. No approved check yet. | Reported |
 | none | Checked and approved. | The build fails if the check is missing or fails |
 
-- An agent may change a marker in the PR that adds the check. The PR needs my `protected-ok` label. Adding it is my sign-off that the check means what the rule says.
+- Agents never change a marker. When a marked rule has a check for every tag, the `spec-ready` workflow opens a PR that removes the marker.
+- I review that PR and add `protected-ok`. That is my sign-off that the check means what the rule says.
 - Agents never add the `protected-ok` label.
 
 ## Format
@@ -95,7 +96,8 @@ It only proves the check exists. Whether it means what the rule says is my revie
 ## For agents
 
 - Take targets only from the tags here.
-- The only edit you may make in `spec/` is removing a marker from a rule whose checks you just built and ran. To propose a rule or a change, open a PR that touches only `spec/` and stop.
+- Do not edit `spec/`. That includes markers. To propose a rule or a change, open a PR that touches only `spec/` and stop.
+- A rule is done for you when `verify/check-rule-ids.sh --ready` lists it as ready for review.
 - Do not weaken a statement, invariant or assumption to make a check pass.
 - For a `(pending)` rule: build the check. If it fails against the code, stop and say so. Do not change the code or the rule.
 - For a `(planned)` rule: build the check first and show it failing. Then change the code until it passes. Both land in one PR.
