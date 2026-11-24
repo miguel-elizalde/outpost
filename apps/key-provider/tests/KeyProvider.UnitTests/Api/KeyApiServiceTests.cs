@@ -105,7 +105,7 @@ public sealed class KeyApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task T2_SignToken_ValidSubject_HeaderNamesTheAlgorithmTypeAndKey()
+    public async Task T2_SignToken_ValidSubject_HeaderNamesTheAlgorithmAndKey()
     {
         // Arrange
         LatestKeyIs(KeyId, Now.AddDays(1));
@@ -116,8 +116,20 @@ public sealed class KeyApiServiceTests : IDisposable
         // Assert
         JsonElement header = TestKeys.Header(response.Token);
         header.GetProperty("alg").GetString().ShouldBe("EdDSA");
-        header.GetProperty("typ").GetString().ShouldBe("JWT");
         header.GetProperty("kid").GetString().ShouldBe(KeyId.ToString());
+    }
+
+    [Fact]
+    public async Task T6_SignToken_ValidSubject_HeaderTypIsAtJwt()
+    {
+        // Arrange
+        LatestKeyIs(KeyId, Now.AddDays(1));
+
+        // Act
+        SignTokenResponse response = await SignTokenAsync(UserId.ToString());
+
+        // Assert
+        TestKeys.Header(response.Token).GetProperty("typ").GetString().ShouldBe("at+jwt");
     }
 
     [Fact]

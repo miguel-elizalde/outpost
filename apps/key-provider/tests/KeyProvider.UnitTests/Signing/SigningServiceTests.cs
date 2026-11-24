@@ -177,6 +177,21 @@ public sealed class SigningServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task T5_GenerateTokenAsync_IssuerConfigured_TokenIssIsTheIssuer()
+    {
+        // Arrange
+        _store.GetLatestKeyPairAsync(Arg.Any<CancellationToken>()).Returns(TestKeys.Create(KeyId, Now.AddDays(1)));
+        using SigningService signing = new(Options.Create(new SigningOptions { Issuer = "test-issuer" }),
+            _services.GetRequiredService<IServiceScopeFactory>(), _clock);
+
+        // Act
+        SignedToken token = await signing.GenerateTokenAsync(UserId, TestContext.Current.CancellationToken);
+
+        // Assert
+        TestKeys.Payload(token.Token).GetProperty("iss").GetString().ShouldBe("test-issuer");
+    }
+
+    [Fact]
     public async Task K1_GenerateTokenAsync_ClockMovesBetweenReads_TokenExpiresBeforeItsKey()
     {
         // Arrange
