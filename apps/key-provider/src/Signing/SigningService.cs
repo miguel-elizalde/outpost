@@ -19,14 +19,14 @@ internal sealed class SigningService(
 {
     private readonly SigningOptions _options = options.Value;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
-    private volatile PrivateSigningKey? _activePrivateKey;
+    private volatile CachedKey? _cachedKey;
 
     public void Dispose()
     {
-        if (_activePrivateKey is { } key)
+        if (_cachedKey is { } cached)
         {
-            CryptographicOperations.ZeroMemory(key.PrivateKey);
-            _activePrivateKey = null;
+            CryptographicOperations.ZeroMemory(cached.Key.PrivateKey);
+            _cachedKey = null;
         }
 
         _refreshLock.Dispose();
@@ -75,19 +75,19 @@ internal sealed class SigningService(
 
     private async Task<ActiveKey> GetActiveKeyAsync(DateTimeOffset now, CancellationToken ct)
     {
-        PrivateSigningKey? cached = _activePrivateKey;
-        if (cached is not null && CanSign(cached, now))
+        CachedKey? cached = _cachedKey;
+        if (cached is not null && CanReuse(cached, now))
         {
-            return new ActiveKey(cached, null);
+            return new ActiveKey(cached.Key, null);
         }
 
         await _refreshLock.WaitAsync(ct);
         try
         {
-            cached = _activePrivateKey;
-            if (cached is not null && CanSign(cached, now))
+            cached = _cachedKey;
+            if (cached is not null && CanReuse(cached, now))
             {
-                return new ActiveKey(cached, null);
+                return new ActiveKey(cached.Key, null);
             }
 
             await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
@@ -95,8 +95,9 @@ internal sealed class SigningService(
 
             SigningKeyPair? published = await keyPairStore.GetLatestKeyPairCreatedByAsync(
                 now - _options.PublishDelay, ct);
-            SigningKeyPair fresh = published is not null && CanSign(published.PrivateKey, now)
-                ? published
+            bool isPublished = published is not null && CanSign(published.PrivateKey, now);
+            SigningKeyPair fresh = isPublished
+                ? published!
                 : await keyPairStore.GetLatestKeyPairAsync(ct) ?? throw new SigningKeyNotFoundException();
 
             if (!CanSign(fresh.PrivateKey, now))
@@ -104,13 +105,23 @@ internal sealed class SigningService(
                 throw new SigningKeyExpiredException(fresh.PrivateKey.Id, fresh.PrivateKey.ExpirationTime);
             }
 
-            _activePrivateKey = fresh.PrivateKey;
-            return new ActiveKey(fresh.PrivateKey, fresh.PublicKey);
+            DateTimeOffset? nextPublishTime = isPublished
+                ? null
+                : await keyPairStore.GetOldestCreationTimeAfterAsync(now - _options.PublishDelay, ct)
+                  + _options.PublishDelay;
+
+            _cachedKey = new CachedKey(fresh.PrivateKey, nextPublishTime ?? DateTimeOffset.MaxValue);
+            return new ActiveKey(fresh.PrivateKey, cached?.Key.Id == fresh.PrivateKey.Id ? null : fresh.PublicKey);
         }
         finally
         {
             _refreshLock.Release();
         }
+    }
+
+    private bool CanReuse(CachedKey cached, DateTimeOffset now)
+    {
+        return now < cached.ReusableUntil && CanSign(cached.Key, now);
     }
 
     private bool CanSign(PrivateSigningKey key, DateTimeOffset now)
@@ -122,4 +133,6 @@ internal sealed class SigningService(
     {
         return Base64Url.EncodeToString(b);
     }
+
+    private sealed record CachedKey(PrivateSigningKey Key, DateTimeOffset ReusableUntil);
 }

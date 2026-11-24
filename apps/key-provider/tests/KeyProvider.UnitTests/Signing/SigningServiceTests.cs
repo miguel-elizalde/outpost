@@ -194,6 +194,31 @@ public sealed class SigningServiceTests : IDisposable
         expiresAt.ShouldBeLessThan(keyExpiresAt.ToUnixTimeSeconds());
     }
 
+    [Fact]
+    public async Task K2_GenerateTokenAsync_OlderKeyBecomesPublished_SwitchesFromTheFallbackKey()
+    {
+        // Arrange
+        DateTimeOffset olderPublishedAt = Now.AddMinutes(1);
+        SigningKeyPair older = TestKeys.Create(KeyId, Now.AddDays(1));
+        SigningKeyPair newest = TestKeys.Create(NewKeyId, Now.AddDays(1));
+        _store.GetLatestKeyPairCreatedByAsync(Now - PublishDelay, Arg.Any<CancellationToken>())
+            .Returns((SigningKeyPair?)null);
+        _store.GetLatestKeyPairCreatedByAsync(olderPublishedAt - PublishDelay, Arg.Any<CancellationToken>())
+            .Returns(older);
+        _store.GetLatestKeyPairAsync(Arg.Any<CancellationToken>()).Returns(newest);
+        _store.GetOldestCreationTimeAfterAsync(Now - PublishDelay, Arg.Any<CancellationToken>())
+            .Returns(olderPublishedAt - PublishDelay);
+        CancellationToken ct = TestContext.Current.CancellationToken;
+        await _signing.GenerateTokenAsync(UserId, ct);
+        _clock.SetUtcNow(olderPublishedAt);
+
+        // Act
+        SignedToken token = await _signing.GenerateTokenAsync(UserId, ct);
+
+        // Assert
+        TestKeys.Header(token.Token).GetProperty("kid").GetGuid().ShouldBe(KeyId);
+    }
+
     private sealed class AdvancingClock(DateTimeOffset start, TimeSpan step) : TimeProvider
     {
         private DateTimeOffset _next = start;

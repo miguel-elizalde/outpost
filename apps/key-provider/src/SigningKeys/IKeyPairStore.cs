@@ -8,5 +8,8 @@ internal interface IKeyPairStore
 
     Task<SigningKeyPair?> GetLatestKeyPairCreatedByAsync(DateTimeOffset createdBy, CancellationToken ct = default);
 
+    Task<DateTimeOffset?> GetOldestCreationTimeAfterAsync(DateTimeOffset createdAfter,
+        CancellationToken ct = default);
+
     Task<PublicSigningKey[]> GetVerificationKeysAsync(CancellationToken ct = default);
 }
