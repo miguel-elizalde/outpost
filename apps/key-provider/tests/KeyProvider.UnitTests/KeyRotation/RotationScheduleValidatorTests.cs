@@ -225,6 +225,21 @@ public sealed class RotationScheduleValidatorTests
     }
 
     [Fact]
+    public void K17_Validate_SmallestGapEqualToAFailedRoundAndItsRetry_Fails()
+    {
+        // Arrange
+        RotationScheduleOptions schedule = new() { Expression = "0,15 0 * * *" };
+
+        // Act
+        ValidateOptionsResult result = Validate(schedule, TimeSpan.FromDays(2), ProductionRetry);
+
+        // Assert
+        result.FailureMessage.ShouldBe(
+            "The smallest gap between schedule slots (00:15:00) must be longer than " +
+            "KeyRotation:Schedule:FailureRetryDelay (00:05:00) plus twice the worst-case retry duration (00:10:00).");
+    }
+
+    [Fact]
     public void K17_Validate_SmallestGapLongerThanAFailedRoundAndItsRetry_Succeeds()
     {
         // Arrange
