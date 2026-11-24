@@ -37,6 +37,10 @@ impl From<AuthServiceError> for Status {
                 info!(error = %e, "rejecting registration");
                 Status::invalid_argument("username or password is too long")
             }
+            e @ AuthServiceError::PasswordTooShort => {
+                info!(error = %e, "rejecting registration");
+                Status::invalid_argument("password must be at least 15 characters")
+            }
             e @ AuthServiceError::UserAlreadyExists(_) => {
                 info!(error = %e, "username taken");
                 Status::already_exists("username unavailable")

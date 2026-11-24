@@ -359,6 +359,22 @@ mod tests {
         }
 
         #[rstest]
+        #[case::ascii_with_spaces("correct horses".to_owned())]
+        #[case::two_byte_characters("é".repeat(14))]
+        #[case::emoji("🐴".repeat(14))]
+        #[tokio::test]
+        async fn l15_password_of_14_code_points_returns_invalid_argument(#[case] password: String) {
+            // Arrange
+            let auth = TestAuth::new().build();
+
+            // Act
+            let result = register(&auth, ALICE, &password).await;
+
+            // Assert
+            expect_code(result, Code::InvalidArgument);
+        }
+
+        #[rstest]
         #[case::username_at_the_limit(256, 15)]
         #[case::password_at_the_limit(5, 1024)]
         #[tokio::test]
