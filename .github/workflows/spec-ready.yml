@@ -1,0 +1,70 @@
+name: spec-ready
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: spec-ready
+  cancel-in-progress: true
+
+jobs:
+  spec-ready:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: spec/ready
+    steps:
+      - uses: actions/checkout@v5
+      - name: Open a PR that removes the marker of every rule whose checks exist
+        run: |
+          set -euo pipefail
+          ready="$(verify/check-rule-ids.sh --ready | sed -nE 's/^(pending|planned) ([A-Z]+[0-9]+) \(checks found, ready for review\)$/\2/p')"
+          if [ -z "$ready" ]; then
+            echo "No marked rule has all its checks."
+            exit 0
+          fi
+          body="$(mktemp)"
+          {
+            echo "These rules now have a check for every tag. Removing the marker turns the check into a gate."
+            echo
+            echo "For each rule: does the check mean what the rule says? If yes for all, add \`protected-ok\`."
+            echo
+          } > "$body"
+          for id in $ready; do
+            lower="$(tr '[:upper:]' '[:lower:]' <<<"$id")"
+            sed -i -E "s/^([[:space:]]*- \*\*${id}\*\* .*[^[:space:]])[[:space:]]+\((pending|planned)\)[[:space:]]*$/\1/" spec/*.md
+            {
+              echo "### $id"
+              echo
+              grep -hE "^[[:space:]]*- \*\*${id}\*\* " spec/*.md | sed -E 's/^[[:space:]]*- //'
+              echo
+              echo '```'
+              git grep -nE "(^|[^A-Za-z0-9])(${id}|${lower})_[A-Za-z0-9_]*" -- . ':!spec' ':!*.md' | cut -c1-200 | head -n 8 || true
+              echo '```'
+              echo
+            } >> "$body"
+          done
+          verify/check-rule-ids.sh > /dev/null
+          if git diff --quiet -- spec; then
+            echo "Nothing to change."
+            exit 0
+          fi
+          count="$(wc -w <<<"$ready" | tr -d ' ')"
+          title="docs: Mark $count rules as checked"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -qam "$title"
+          git push --force origin "$BRANCH"
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr edit "$BRANCH" --title "$title" --body-file "$body" --remove-label protected-ok || gh pr edit "$BRANCH" --title "$title" --body-file "$body"
+          else
+            gh pr create --head "$BRANCH" --base main --title "$title" --body-file "$body"
+          fi
