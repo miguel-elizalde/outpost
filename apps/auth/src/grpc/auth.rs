@@ -779,6 +779,22 @@ mod tests {
             // Assert
             expect_code(result, Code::Unauthenticated);
         }
+
+        #[tokio::test]
+        async fn r4_swapped_token_used_after_its_own_expiry_ends_the_session() {
+            // Arrange
+            let auth = TestAuth::new().build();
+            let first = sign_up(&auth, ALICE).await;
+            let newest = refresh_after_days(&auth, &first, 1).await;
+            auth.clock.advance(Duration::days(6));
+            let _ = refresh(&auth, &first).await;
+
+            // Act
+            let result = refresh(&auth, &newest).await;
+
+            // Assert
+            expect_code(result, Code::Unauthenticated);
+        }
     }
 
     mod logout {
@@ -844,6 +860,22 @@ mod tests {
             let auth = TestAuth::new().build();
             let first = sign_up(&auth, ALICE).await;
             let newest = refresh(&auth, &first).await.unwrap().refresh_token;
+            logout(&auth, &first).await.unwrap();
+
+            // Act
+            let result = refresh(&auth, &newest).await;
+
+            // Assert
+            expect_code(result, Code::Unauthenticated);
+        }
+
+        #[tokio::test]
+        async fn r25_swapped_token_used_after_its_own_expiry_ends_the_session() {
+            // Arrange
+            let auth = TestAuth::new().build();
+            let first = sign_up(&auth, ALICE).await;
+            let newest = refresh_after_days(&auth, &first, 1).await;
+            auth.clock.advance(Duration::days(6));
             logout(&auth, &first).await.unwrap();
 
             // Act
