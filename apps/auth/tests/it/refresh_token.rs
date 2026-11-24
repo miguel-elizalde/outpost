@@ -34,7 +34,7 @@ async fn valid_token_new_session_in_redis_expires_when_the_new_token_does() {
 }
 
 #[tokio::test]
-async fn swapped_token_is_remembered_until_its_session_ends() {
+async fn r4_swapped_token_is_remembered_until_its_session_ends() {
     // Arrange
     let auth = Auth::start().await;
     let token = auth.sign_up(ALICE).await.refresh_token;
