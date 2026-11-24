@@ -62,7 +62,7 @@ mod tests {
     #[case::idle_timeout_over_a_year("idle_timeout_secs", "31536001")]
     #[case::max_age_zero("max_age_secs", "0")]
     #[case::max_age_over_a_year("max_age_secs", "31536001")]
-    fn deserialize_outside_one_second_to_a_year_is_rejected(
+    fn r22_deserialize_outside_one_second_to_a_year_is_rejected(
         #[case] key: &str,
         #[case] value: &str,
     ) {

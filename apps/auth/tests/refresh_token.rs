@@ -7,7 +7,7 @@ use tonic::Code;
 const ALICE: &str = "alice";
 
 #[tokio::test]
-async fn valid_token_returns_a_new_refresh_token() {
+async fn r1_r14_valid_token_returns_a_new_refresh_token() {
     // Arrange
     let auth = Auth::start().await;
     let token = auth.sign_up(ALICE).await.refresh_token;

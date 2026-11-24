@@ -59,7 +59,7 @@ public sealed class KeyStorageTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task RotateAsync_NewKey_StoresThePrivateKeyEncrypted()
+    public async Task K7_RotateAsync_NewKey_StoresThePrivateKeyEncrypted()
     {
         // Arrange
         TestDatabases databases = await postgres.CreateDatabasesAsync(_ct);
@@ -117,7 +117,7 @@ public sealed class KeyStorageTests(PostgresFixture postgres)
     [InlineData("UPDATE key_rotation_job SET finished_at = finished_at")]
     [InlineData("DELETE FROM key_rotation_job")]
     [InlineData("TRUNCATE key_rotation_job CASCADE")]
-    public async Task KeyHistory_Changing_IsRefusedByTheDatabase(string sql)
+    public async Task K5_KeyHistory_Changing_IsRefusedByTheDatabase(string sql)
     {
         // Arrange
         TestDatabases databases = await postgres.CreateDatabasesAsync(_ct);
@@ -141,7 +141,7 @@ public sealed class KeyStorageTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task SaveKeyPairAsync_RotationJobFailed_Throws()
+    public async Task K6_SaveKeyPairAsync_RotationJobFailed_Throws()
     {
         // Arrange
         await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));

@@ -122,7 +122,7 @@ async fn http_login_wrong_password_returns_401_problem_with_a_challenge() {
 }
 
 #[tokio::test]
-async fn jwks_keeps_answering_while_the_key_provider_is_down() {
+async fn j3_jwks_keeps_answering_while_the_key_provider_is_down() {
     // Arrange
     let config = KeyStubConfig::default();
     let key_id = config.key_id.to_string();

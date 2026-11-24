@@ -335,7 +335,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn username_of_only_spaces_returns_invalid_argument() {
+        async fn l26_username_of_only_spaces_returns_invalid_argument() {
             // Arrange
             let auth = TestAuth::new().build();
 
@@ -445,7 +445,7 @@ mod tests {
         use super::*;
 
         #[tokio::test]
-        async fn right_password_returns_an_access_token_for_the_user() {
+        async fn l8_right_password_returns_an_access_token_for_the_user() {
             // Arrange
             let auth = TestAuth::new().build();
             sign_up(&auth, ALICE).await;
@@ -703,7 +703,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn switched_off_account_is_refused() {
+        async fn r11_switched_off_account_is_refused() {
             // Arrange
             let auth = TestAuth::new().build();
             let token = sign_up(&auth, ALICE).await;
@@ -717,7 +717,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn switched_off_account_session_stays_ended_when_switched_back_on() {
+        async fn r26_switched_off_account_session_stays_ended_when_switched_back_on() {
             // Arrange
             let auth = TestAuth::new().build();
             let token = sign_up(&auth, ALICE).await;
@@ -1139,7 +1139,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn refresh_token_store_unreachable_returns_unavailable() {
+        async fn r17_refresh_token_store_unreachable_returns_unavailable() {
             // Arrange
             let mut store = MockRefreshTokenStore::new();
             store
@@ -1155,7 +1155,7 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn database_unreachable_when_checking_the_user_on_refresh_returns_unavailable() {
+        async fn r18_database_unreachable_when_checking_the_user_on_refresh_returns_unavailable() {
             // Arrange
             let mut users = MockUserRepository::new();
             users.expect_is_active().returning(|_| Err(database_down()));

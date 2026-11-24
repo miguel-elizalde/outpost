@@ -58,7 +58,7 @@ public sealed class StartupTests(PostgresFixture postgres)
     }
 
     [Fact]
-    public async Task Start_KeyLifespanShorterThanTheSchedule_RefusesToStart()
+    public async Task K4_Start_KeyLifespanShorterThanTheSchedule_RefusesToStart()
     {
         // Arrange
         await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));
