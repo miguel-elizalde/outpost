@@ -41,6 +41,24 @@ internal sealed class KeyPairStore(
         return FindNewestAsync(context.KeyPairRecords.CreatedBy(createdBy), ct);
     }
 
+    public async Task<DateTimeOffset?> GetOldestCreationTimeAfterAsync(DateTimeOffset createdAfter,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            return await context.KeyPairRecords
+                .AsNoTracking()
+                .CreatedAfter(createdAfter)
+                .OldestFirst()
+                .Select(r => (DateTimeOffset?)r.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+        }
+        catch (Exception e) when (DatabaseErrors.IsTemporary(e))
+        {
+            throw new DatabaseUnavailableException(e);
+        }
+    }
+
     private async Task<SigningKeyPair?> FindNewestAsync(IQueryable<KeyPairRecord> records, CancellationToken ct)
     {
         KeyPairRecord? record = await FindNewestRecordAsync(records, ct);

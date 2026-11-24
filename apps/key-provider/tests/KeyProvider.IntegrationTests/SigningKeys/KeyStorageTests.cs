@@ -284,6 +284,26 @@ public sealed class KeyStorageTests(PostgresFixture postgres)
         violation.ConstraintName.ShouldBe("pk_key_pair_record");
     }
 
+    [Fact]
+    public async Task GetOldestCreationTimeAfterAsync_ThreeKeys_ReturnsTheFirstKeyCreatedAfterTheTime()
+    {
+        // Arrange
+        await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));
+        await service.RotateAsync(_ct);
+        service.Time.Advance(TimeSpan.FromMinutes(1));
+        await service.RotateAsync(_ct);
+        service.Time.Advance(TimeSpan.FromMinutes(1));
+        await service.RotateAsync(_ct);
+        await using AsyncServiceScope scope = service.Services.CreateAsyncScope();
+        IKeyPairStore store = scope.ServiceProvider.GetRequiredService<IKeyPairStore>();
+
+        // Act
+        DateTimeOffset? createdAt = await store.GetOldestCreationTimeAfterAsync(ServiceFactory.Start, _ct);
+
+        // Assert
+        createdAt.ShouldBe(ServiceFactory.Start.AddMinutes(1));
+    }
+
     private static KeyPairRecord SuccessfulKeyPair(Guid keyId)
     {
         KeyRotationJob job = new()

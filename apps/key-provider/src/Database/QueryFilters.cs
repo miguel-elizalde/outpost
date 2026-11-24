@@ -21,6 +21,12 @@ internal static class QueryFilters
         return query.Where(r => r.CreatedAt <= createdBy);
     }
 
+    internal static IQueryable<KeyPairRecord> CreatedAfter(this IQueryable<KeyPairRecord> query,
+        DateTimeOffset createdAfter)
+    {
+        return query.Where(r => r.CreatedAt > createdAfter);
+    }
+
     internal static IQueryable<KeyPairRecord> Verifiable(this IQueryable<KeyPairRecord> query,
         TimeProvider timeProvider)
     {
