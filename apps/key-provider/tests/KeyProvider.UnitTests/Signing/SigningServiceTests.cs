@@ -199,7 +199,7 @@ public sealed class SigningServiceTests : IDisposable
         DateTimeOffset keyExpiresAt = Now + lifetime + TimeSpan.FromSeconds(90);
         _store.GetLatestKeyPairAsync(Arg.Any<CancellationToken>()).Returns(TestKeys.Create(KeyId, keyExpiresAt));
         using SigningService signing = new(Options.Create(new SigningOptions()),
-            _services.GetRequiredService<IServiceScopeFactory>(), new AdvancingClock(Now, TimeSpan.FromMinutes(1)));
+            _services.GetRequiredService<IServiceScopeFactory>(), new AdvancingClock(Now, TimeSpan.FromMinutes(2)));
 
         // Act
         SignedToken token = await signing.GenerateTokenAsync(UserId, TestContext.Current.CancellationToken);
