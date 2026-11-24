@@ -39,9 +39,8 @@ internal sealed class SigningService(
         return JsonSerializer.SerializeToUtf8Bytes(header);
     }
 
-    private byte[] GetPayload(Guid sub)
+    private byte[] GetPayload(Guid sub, DateTimeOffset now)
     {
-        DateTimeOffset now = timeProvider.GetUtcNow();
         Dictionary<string, object> claims = new()
         {
             ["iss"] = _options.Issuer,
@@ -57,9 +56,10 @@ internal sealed class SigningService(
 
     internal async Task<SignedToken> GenerateTokenAsync(Guid sub, CancellationToken ct = default)
     {
-        (PrivateSigningKey privateKey, PublicSigningKey? newPublicKey) = await GetActiveKeyAsync(ct);
+        DateTimeOffset now = timeProvider.GetUtcNow();
+        (PrivateSigningKey privateKey, PublicSigningKey? newPublicKey) = await GetActiveKeyAsync(now, ct);
         byte[] headerJson = GetHeader(privateKey);
-        byte[] payloadJson = GetPayload(sub);
+        byte[] payloadJson = GetPayload(sub, now);
 
         string signingInput = $"{B64Url(headerJson)}.{B64Url(payloadJson)}";
         byte[] data = Encoding.ASCII.GetBytes(signingInput);
@@ -73,10 +73,10 @@ internal sealed class SigningService(
         return new SignedToken($"{signingInput}.{B64Url(signature)}", privateKey.Id, newPublicKey);
     }
 
-    private async Task<ActiveKey> GetActiveKeyAsync(CancellationToken ct)
+    private async Task<ActiveKey> GetActiveKeyAsync(DateTimeOffset now, CancellationToken ct)
     {
         PrivateSigningKey? cached = _activePrivateKey;
-        if (cached is not null && CanSign(cached))
+        if (cached is not null && CanSign(cached, now))
         {
             return new ActiveKey(cached, null);
         }
@@ -85,7 +85,7 @@ internal sealed class SigningService(
         try
         {
             cached = _activePrivateKey;
-            if (cached is not null && CanSign(cached))
+            if (cached is not null && CanSign(cached, now))
             {
                 return new ActiveKey(cached, null);
             }
@@ -94,12 +94,12 @@ internal sealed class SigningService(
             IKeyPairStore keyPairStore = scope.ServiceProvider.GetRequiredService<IKeyPairStore>();
 
             SigningKeyPair? published = await keyPairStore.GetLatestKeyPairCreatedByAsync(
-                timeProvider.GetUtcNow() - _options.PublishDelay, ct);
-            SigningKeyPair fresh = published is not null && CanSign(published.PrivateKey)
+                now - _options.PublishDelay, ct);
+            SigningKeyPair fresh = published is not null && CanSign(published.PrivateKey, now)
                 ? published
                 : await keyPairStore.GetLatestKeyPairAsync(ct) ?? throw new SigningKeyNotFoundException();
 
-            if (!CanSign(fresh.PrivateKey))
+            if (!CanSign(fresh.PrivateKey, now))
             {
                 throw new SigningKeyExpiredException(fresh.PrivateKey.Id, fresh.PrivateKey.ExpirationTime);
             }
@@ -113,9 +113,9 @@ internal sealed class SigningService(
         }
     }
 
-    private bool CanSign(PrivateSigningKey key)
+    private bool CanSign(PrivateSigningKey key, DateTimeOffset now)
     {
-        return key.ExpirationTime > timeProvider.GetUtcNow() + _options.TokenLifetime;
+        return key.ExpirationTime > now + _options.TokenLifetime;
     }
 
     private static string B64Url(ReadOnlySpan<byte> b)
