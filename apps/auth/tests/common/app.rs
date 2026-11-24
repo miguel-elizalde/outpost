@@ -8,6 +8,7 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
     net::TcpStream,
     process::{Child, Command},
+    task::JoinHandle,
 };
 use tonic::transport::Channel;
 use uuid::Uuid;
@@ -18,6 +19,9 @@ use super::{
 };
 
 pub const PEPPER: &str = "test-pepper";
+
+const BIND_ATTEMPTS: u32 = 5;
+const PORT_TAKEN: &str = "Address already in use";
 
 pub struct App {
     _child: Child,
@@ -32,23 +36,42 @@ impl App {
     }
 
     pub async fn start_with(db: &str, key_provider: SocketAddr, settings: &[(&str, &str)]) -> Self {
+        for _ in 0..BIND_ATTEMPTS {
+            if let Some(app) = Self::try_start(db, key_provider, settings).await {
+                return app;
+            }
+        }
+        panic!("auth found its port taken {BIND_ATTEMPTS} times");
+    }
+
+    async fn try_start(
+        db: &str,
+        key_provider: SocketAddr,
+        settings: &[(&str, &str)],
+    ) -> Option<Self> {
         let addr = free_address();
         let http_addr = free_address();
-        let mut child = spawn(db, key_provider, addr, http_addr, settings).await;
+        let (mut child, stderr) = spawn(db, key_provider, addr, http_addr, settings).await;
         let deadline = tokio::time::Instant::now() + Duration::from_secs(30);
         loop {
             if let Some(status) = child.try_wait().unwrap() {
+                if stderr
+                    .await
+                    .expect("stderr reader only ends when the stream closes")
+                {
+                    return None;
+                }
                 panic!("auth exited before it was ready: {status}");
             }
             if let Some(client) = answering_client(addr).await
                 && TcpStream::connect(http_addr).await.is_ok()
             {
-                return Self {
+                return Some(Self {
                     _child: child,
                     client,
                     grpc_addr: addr,
                     http_addr,
-                };
+                });
             }
             assert!(
                 tokio::time::Instant::now() < deadline,
@@ -77,7 +100,7 @@ async fn spawn(
     addr: SocketAddr,
     http_addr: SocketAddr,
     settings: &[(&str, &str)],
-) -> Child {
+) -> (Child, JoinHandle<bool>) {
     let infra = infra().await;
     let mut child = Command::new(env!("CARGO_BIN_EXE_auth"))
         .env_clear()
@@ -112,17 +135,20 @@ async fn spawn(
         .spawn()
         .expect("start auth");
     forward_output(child.stdout.take().unwrap());
-    forward_output(child.stderr.take().unwrap());
-    child
+    let stderr = forward_output(child.stderr.take().expect("stderr is piped above"));
+    (child, stderr)
 }
 
-fn forward_output(stream: impl AsyncRead + Unpin + Send + 'static) {
+fn forward_output(stream: impl AsyncRead + Unpin + Send + 'static) -> JoinHandle<bool> {
     tokio::spawn(async move {
+        let mut port_taken = false;
         let mut lines = BufReader::new(stream).lines();
         while let Ok(Some(line)) = lines.next_line().await {
+            port_taken |= line.contains(PORT_TAKEN);
             println!("[auth] {line}");
         }
-    });
+        port_taken
+    })
 }
 
 pub fn free_address() -> SocketAddr {
