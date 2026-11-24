@@ -72,11 +72,13 @@ internal sealed class RotationScheduleValidator(
         {
             DateTimeOffset? next = expression.GetNextOccurrence(previous.Value, TimeZoneInfo.Utc);
             TimeSpan? gap = next - previous;
+            // Stryker disable once Equality : equivalent, assigning an equal gap changes nothing
             if (gap > maxGap)
             {
                 maxGap = gap.Value;
             }
 
+            // Stryker disable once Equality : equivalent, assigning an equal gap changes nothing
             if (gap < minGap)
             {
                 minGap = gap.Value;
