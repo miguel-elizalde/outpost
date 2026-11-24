@@ -115,6 +115,28 @@ public sealed class StartupTests(PostgresFixture postgres)
         );
     }
 
+    [Theory]
+    [InlineData("RS256")]
+    [InlineData("eddsa")]
+    [InlineData("none")]
+    public async Task T9_Start_AlgorithmOtherThanEdDSA_RefusesToStart(string algorithm)
+    {
+        // Arrange
+        await using ServiceFactory service = new(await postgres.CreateDatabasesAsync(_ct));
+        await using WebApplicationFactory<Program> misconfigured = service.WithWebHostBuilder(b =>
+            b.UseSetting("Signing:Algorithm", algorithm)
+        );
+
+        // Act
+        AggregateException error = Should.Throw<AggregateException>(() => misconfigured.Services);
+
+        // Assert
+        error.InnerExceptions.ShouldAllBe(inner =>
+            inner is OptionsValidationException
+            && ((OptionsValidationException)inner).OptionsType == typeof(SigningOptions)
+        );
+    }
+
     [Fact]
     public async Task Start_SigningSettingsGiven_UsesThem()
     {

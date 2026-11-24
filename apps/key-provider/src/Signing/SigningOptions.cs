@@ -4,7 +4,7 @@ namespace KeyProvider.Signing;
 
 public sealed record SigningOptions
 {
-    [Required] public string Algorithm { get; init; } = "EdDSA";
+    [Required, AllowedValues("EdDSA")] public string Algorithm { get; init; } = "EdDSA";
 
     [Required, AllowedValues("at+jwt")] public string Type { get; init; } = "at+jwt";
 
