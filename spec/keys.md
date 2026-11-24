@@ -6,9 +6,11 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Signing
 
-- **K1** [tla, test] Every access token expires before the key that signed it. (pending)
+- **K1** [tla, test] Every access token expires before the key that signed it. (planned)
   - Assumes: A1.
-- **K2** [tla, test] The key provider signs with a key created at least `PublishDelay` ago whenever such a key can still sign. (pending)
+  - Why: fails in a narrow race. The clock is read twice (`Signing/SigningService.cs:116-119`, then `:44-51`). A key that expires between the reads signs a token that outlives it.
+- **K2** [tla, test] The key provider signs with a key created at least `PublishDelay` ago whenever such a key can still sign. (planned)
+  - Why: fails in an edge case. A fallback key stays cached and keeps signing after an older key becomes published (`Signing/SigningService.cs:78-82`).
 - **K3** [tla] The key provider always has a key that can sign. (pending)
   - Assumes: each due rotation succeeds within its first retry round.
   - Assumes: A1. A4.

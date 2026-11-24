@@ -16,22 +16,23 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 ## Passwords
 
 - **L3** [test] Register and login reject a username over 256 characters or a password over 1024 bytes without hashing it. (pending)
-- **L4** [test] Passwords are hashed with Argon2id using the configured cost. (pending)
+- **L4** [test] Every stored password hash is Argon2id with at least 19 MiB of memory and 2 iterations. (pending)
+  - Why: the OWASP minimum. Today this is the library default, not a setting.
+- **L29** [test] Login fails when auth runs with a different pepper than the one the password was registered with. (pending)
+  - Why: NIST SP 800-63B-4 3.1.1.2 recommends a secret key stored apart from the hashes.
 - **L11** [test] Registering the same password for two users stores two different hashes. (pending)
   - Why: NIST SP 800-63B-4 3.1.1.2 requires a salt.
 - **L12** [test] Login fails for a password that differs from the registered one only in its last byte, at the maximum length. (pending)
   - Why: NIST requires verifying the whole password, with no truncation.
-- **L14** [test] Auth refuses to start when Argon2id memory is under 19 MiB or iterations are under 2, unless `allow_weak_hashing` is set. (planned)
-  - Why: the OWASP minimum. The override exists so tests can hash cheaply.
 - **L15** [test] Register rejects a password shorter than 15 Unicode code points. (planned)
   - Why: NIST SP 800-63B-4 3.1.1.2, the minimum for password-only login.
-- **L16** [test] Register accepts every password of 15 to 64 code points that L18 does not reject, including spaces and Unicode. (planned)
+- **L16** [test] Register accepts every password of 15 to 64 code points that L18 does not reject, including spaces and Unicode. (pending)
   - Why: NIST forbids composition rules.
 - **L17** [test] A password logs in whether its Unicode characters arrive composed or decomposed. (planned)
   - Why: NIST recommends NFC normalization before hashing.
 - **L18** [test] Register rejects a password that is on the blocklist or equal to the username. (planned)
   - Why: NIST SP 800-63B-4 3.1.1.2.
-- **L21** [test] After the configured Argon2id cost is raised, a user's next successful login stores a hash at the new cost. (planned)
+- **L21** [test] After the Argon2id cost is raised, a user's next successful login stores a hash at the new cost. (planned)
 
 ## Login
 
@@ -60,5 +61,5 @@ Terms and assumptions `A1` to `A8` are in `shared.md`.
 
 ## Secrets
 
-- **L13** [test] No log line or gRPC error message contains a password. (pending)
-- **L25** [test] No gRPC response contains a password hash. (pending)
+- **L13** [test] No log line or error response contains a password. (pending)
+- **L25** [test] No response from auth contains a password hash. (pending)
